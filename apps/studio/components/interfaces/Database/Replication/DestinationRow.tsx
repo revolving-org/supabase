@@ -1,4 +1,3 @@
-import { AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
@@ -17,11 +16,11 @@ import {
   usePipelineRequestStatus,
 } from 'state/replication-pipeline-request-status'
 import type { ResponseError } from 'types'
-import { Button, Tooltip, TooltipContent, TooltipTrigger } from 'ui'
-import ShimmeringLoader from 'ui-patterns/ShimmeringLoader'
+import { Button, Tooltip, TooltipContent, TooltipTrigger, WarningIcon } from 'ui'
+import { ShimmeringLoader } from 'ui-patterns/ShimmeringLoader'
 import { DeleteDestination } from './DeleteDestination'
 import { DestinationPanel } from './DestinationPanel/DestinationPanel'
-import { DestinationPanelSchemaType } from './DestinationPanel/DestinationPanel.schema'
+import { DestinationType } from './DestinationPanel/DestinationPanel.types'
 import { getStatusName, PIPELINE_ERROR_MESSAGES } from './Pipeline.utils'
 import { PipelineStatus } from './PipelineStatus'
 import { PipelineStatusName, STATUS_REFRESH_FREQUENCY_MS } from './Replication.constants'
@@ -32,7 +31,7 @@ interface DestinationRowProps {
   sourceId?: number
   destinationId: number
   destinationName: string
-  type: DestinationPanelSchemaType['type'] | 'Other'
+  type?: DestinationType
   pipeline?: Pipeline
   error: ResponseError | null
   isLoading: boolean
@@ -178,22 +177,19 @@ export const DestinationRow = ({
           </Table.td>
           <Table.td>
             <div className="flex items-center justify-end gap-x-2">
+              {hasTableErrors && (
+                <Tooltip>
+                  <TooltipTrigger>
+                    <WarningIcon />
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    {errorCount} table{errorCount === 1 ? '' : 's'} encountered replication errors
+                  </TooltipContent>
+                </Tooltip>
+              )}
               <Button asChild type="default" className="relative">
                 <Link href={`/project/${projectRef}/database/replication/${pipeline?.id}`}>
-                  <span className="inline-flex items-center gap-2">
-                    <span>View status</span>
-                    {hasTableErrors && (
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <AlertCircle size={14} />
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom">
-                          {errorCount} table{errorCount === 1 ? '' : 's'} encountered replication
-                          errors
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
-                  </span>
+                  View replication
                 </Link>
               </Button>
               <RowMenu
@@ -222,8 +218,8 @@ export const DestinationRow = ({
 
       <DestinationPanel
         visible={showEditDestinationPanel}
+        type={type}
         onClose={() => setShowEditDestinationPanel(false)}
-        sourceId={sourceId}
         existingDestination={{
           sourceId,
           destinationId: destinationId,
